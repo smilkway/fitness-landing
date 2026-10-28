@@ -8,6 +8,10 @@
   <!-- Pretendard 폰트 CDN -->
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   
+  <!-- Supabase JS CDN 및 설정 파일 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -46,7 +50,6 @@
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
     }
-    /* 커스텀 스크롤바 */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -81,24 +84,26 @@
           </div>
         </a>
         <span class="hidden md:inline-block h-5 w-px bg-slate-800 ml-2"></span>
-        <span class="hidden md:inline-block text-xs bg-slate-800/90 text-brand-lime font-medium px-2.5 py-1 rounded-md border border-brand-lime/20">
-          ● 실시간 데이터 연동 중
-        </span>
+        
+        <!-- 데이터베이스 연결 상태 배지 (클릭 시 Supabase 모달 오픈) -->
+        <button id="dbStatusBadge" class="hidden sm:flex items-center gap-1.5 text-xs bg-slate-800/90 text-slate-300 hover:text-white px-2.5 py-1 rounded-md border border-slate-700 transition-colors cursor-pointer" title="클릭하여 Supabase 클라우드 DB 연동 설정">
+          <span id="dbStatusDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+          <span id="dbStatusText">로컬 스토리지 모드</span>
+          <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+        </button>
       </div>
 
       <!-- 우측 빠른 액션 및 홈 바로가기 -->
       <div class="flex items-center gap-3">
-        <div class="hidden sm:flex flex-col text-right">
-          <span class="text-xs text-slate-300 font-semibold flex items-center gap-1.5 justify-end">
-            <span class="w-2 h-2 rounded-full bg-brand-lime"></span>
-            마스터 매니저 (최고관리자)
-          </span>
-          <span id="currentTime" class="text-[11px] text-slate-400 font-mono">2026-10-28 20:00:00</span>
-        </div>
+        <!-- Supabase 설정 버튼 -->
+        <button id="openSupabaseModalBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-brand-lime hover:text-white text-xs font-semibold border border-brand-lime/30 transition-colors">
+          <svg class="w-4 h-4 text-brand-lime" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+          <span class="hidden sm:inline">Supabase 연동</span>
+        </button>
 
         <a href="index.html" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors">
           <svg class="w-4 h-4 text-brand-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-          <span>랜딩페이지 보기</span>
+          <span>랜딩페이지</span>
         </a>
       </div>
 
@@ -220,6 +225,15 @@
 
         <!-- 우측 액션 버튼들 -->
         <div class="flex items-center gap-2 flex-wrap">
+          <!-- 새로고침 버튼 -->
+          <button 
+            id="refreshBtn"
+            class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs border border-slate-700 transition-colors"
+            title="데이터 새로고침"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          </button>
+
           <!-- 신규 수기 등록 버튼 -->
           <button 
             id="openAddModalBtn"
@@ -262,7 +276,7 @@
           </span>
         </div>
         <span class="text-[11px] text-slate-500 hidden sm:inline">
-          * 상태 드롭다운을 변경하면 즉시 자동 저장됩니다.
+          * 변경 사항은 클라우드 DB 및 로컬에 실시간 동기화됩니다.
         </span>
       </div>
 
@@ -418,6 +432,83 @@
     </div>
   </div>
 
+  <!-- ================= 모달 3: Supabase 연동 설정 모달 ================= -->
+  <div id="supabaseModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md hidden">
+    <div class="relative w-full max-w-lg rounded-2xl bg-slate-900 border border-brand-lime p-6 sm:p-8 shadow-2xl">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+            <svg class="w-5 h-5 text-brand-lime" viewBox="0 0 24 24" fill="currentColor"><path d="M21.362 9.354H12V.396a.396.396 0 0 0-.716-.233L.169 13.916a.396.396 0 0 0 .317.632H12v9.052a.396.396 0 0 0 .716.233l11.115-13.753a.396.396 0 0 0-.317-.632z"/></svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-white">Supabase 클라우드 DB 연동 설정</h3>
+            <p class="text-[11px] text-slate-400">PostgreSQL 기반 실시간 클라우드 DB 연동</p>
+          </div>
+        </div>
+        <button id="closeSupabaseModalBtn" class="text-slate-400 hover:text-white text-xl">&times;</button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">
+            Supabase Project URL
+          </label>
+          <input 
+            type="url" 
+            id="sbUrlInput" 
+            placeholder="https://xyzcompany.supabase.co" 
+            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-600 focus:outline-none focus:border-brand-lime"
+          >
+          <span class="text-[10px] text-slate-500 mt-1 block">Supabase 대시보드 ➔ Project Settings ➔ API 에서 확인 가능</span>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">
+            Supabase Anon Public API Key
+          </label>
+          <input 
+            type="password" 
+            id="sbKeyInput" 
+            placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." 
+            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-600 focus:outline-none focus:border-brand-lime font-mono text-[11px]"
+          >
+          <span class="text-[10px] text-slate-500 mt-1 block">Project API keys의 `anon` `public` 키를 입력하세요.</span>
+        </div>
+
+        <!-- 안내 상자 & SQL 원클릭 복사 -->
+        <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-300 flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-brand-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              테이블 생성 SQL (schema.sql)
+            </span>
+            <button id="copySqlBtn" class="text-[11px] font-bold text-brand-lime hover:underline flex items-center gap-1">
+              <span>SQL 복사하기</span>
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-400 leading-relaxed">
+            Supabase의 <strong>SQL Editor</strong>에서 [SQL 복사하기] 버튼을 누른 후 붙여넣고 [Run]을 누르면 `reservations` 테이블이 자동 생성됩니다.
+          </p>
+        </div>
+
+        <!-- 상태 알림 메시지 영역 -->
+        <div id="sbStatusMsg" class="hidden text-xs py-2 px-3 rounded-lg"></div>
+
+        <div class="pt-3 flex items-center justify-between border-t border-slate-800">
+          <button type="button" id="disconnectSbBtn" class="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-400 hover:text-rose-400 text-xs">
+            연동 해제 (로컬 모드)
+          </button>
+          <div class="flex items-center gap-2">
+            <button type="button" id="cancelSupabaseModalBtn" class="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white font-semibold">닫기</button>
+            <button type="button" id="saveSupabaseBtn" class="px-5 py-2.5 rounded-xl bg-brand-lime hover:bg-brand-limeGlow text-black font-extrabold shadow-[0_0_15px_rgba(132,204,22,0.4)]">
+              연결 테스트 & 저장
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= 자바스크립트 로직 ================= -->
   <script>
     const STORAGE_KEY = 'aura_reservations';
@@ -466,49 +557,103 @@
       }
     ];
 
-    function getReservations() {
-      const data = localStorage.getItem(STORAGE_KEY);
-      if (!data) {
+    let cachedReservations = [];
+
+    // 2. 데이터 가져오기 (Supabase 우선, 없으면 로컬스토리지)
+    async function fetchReservations() {
+      const isSb = window.AuraSupabase && window.AuraSupabase.isConnected();
+      updateDbBadge(isSb);
+
+      if (isSb) {
+        try {
+          const supabase = window.AuraSupabase.getClient();
+          const { data, error } = await supabase
+            .from('reservations')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          if (!error && data) {
+            // 정규화: created_at 매핑
+            cachedReservations = data.map(item => ({
+              id: item.id,
+              name: item.name,
+              phone: item.phone,
+              date: item.date,
+              goal: item.goal || '1:1 VIP 맞춤 PT',
+              memo: item.memo || '',
+              status: item.status || '대기중',
+              createdAt: item.created_at ? new Date(item.created_at).toLocaleString('ko-KR', {
+                year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
+              }) : '-'
+            }));
+            // 로컬 스토리지 캐시 동기화
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(cachedReservations));
+            return cachedReservations;
+          }
+        } catch (err) {
+          console.warn('[AURA CRM] Supabase 조회 실패, 로컬 캐시 사용:', err);
+        }
+      }
+
+      // 로컬스토리지 fallback
+      const localData = localStorage.getItem(STORAGE_KEY);
+      if (!localData) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultSamples));
-        return defaultSamples;
+        cachedReservations = defaultSamples;
+      } else {
+        try {
+          cachedReservations = JSON.parse(localData);
+        } catch (e) {
+          cachedReservations = defaultSamples;
+        }
       }
-      try {
-        return JSON.parse(data);
-      } catch (e) {
-        return defaultSamples;
+      return cachedReservations;
+    }
+
+    // 3. 상태 뱃지 UI 갱신
+    function updateDbBadge(isSb) {
+      const dot = document.getElementById('dbStatusDot');
+      const text = document.getElementById('dbStatusText');
+      if (isSb) {
+        dot.className = 'w-2 h-2 rounded-full bg-brand-lime shadow-[0_0_8px_rgba(132,204,22,0.8)]';
+        text.textContent = 'Supabase 클라우드 연동 됨';
+        text.className = 'text-brand-lime font-semibold';
+      } else {
+        dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+        text.textContent = '로컬 스토리지 모드';
+        text.className = 'text-slate-300';
       }
     }
 
-    function saveReservations(data) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      renderDashboard();
+    // 4. Supabase Realtime 구독 설정
+    let realtimeChannel = null;
+    function setupRealtimeSubscription() {
+      if (!window.AuraSupabase || !window.AuraSupabase.isConnected()) return;
+      const supabase = window.AuraSupabase.getClient();
+      if (!supabase) return;
+
+      if (realtimeChannel) {
+        supabase.removeChannel(realtimeChannel);
+      }
+
+      realtimeChannel = supabase
+        .channel('aura-reservations-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, (payload) => {
+          console.log('[AURA CRM] 실시간 데이터 변경 감지:', payload);
+          renderDashboard();
+        })
+        .subscribe();
     }
 
-    // 2. 실시간 시계
-    function updateClock() {
-      const now = new Date();
-      document.getElementById('currentTime').textContent = now.toLocaleString('ko-KR', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      });
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-
-    // 3. 렌더링 및 통계 계산
+    // 5. 실시간 렌더링 및 통계 계산
     const tableBody = document.getElementById('tableBody');
     const emptyState = document.getElementById('emptyState');
     const searchInput = document.getElementById('searchInput');
     const statusFilter = document.getElementById('statusFilter');
     const goalFilter = document.getElementById('goalFilter');
 
-    function renderDashboard() {
-      const allData = getReservations();
+    async function renderDashboard() {
+      const allData = await fetchReservations();
 
       // KPI 카운트
       const totalCount = allData.length;
@@ -546,7 +691,6 @@
 
       emptyState.classList.add('hidden');
 
-      // 상태별 뱃지 스타일
       const statusStyles = {
         '대기중': 'bg-amber-500/15 text-amber-400 border border-amber-500/30',
         '예약확정': 'bg-brand-cyan/15 text-brand-cyan border border-brand-cyan/30',
@@ -613,32 +757,51 @@
       });
     }
 
-    // 4. 상태 변경
-    window.changeStatus = function(id, newStatus) {
-      const data = getReservations();
-      const item = data.find(d => d.id === id);
+    // 6. 상태 변경
+    window.changeStatus = async function(id, newStatus) {
+      // Supabase 업데이트
+      if (window.AuraSupabase && window.AuraSupabase.isConnected()) {
+        try {
+          const supabase = window.AuraSupabase.getClient();
+          await supabase.from('reservations').update({ status: newStatus }).eq('id', id);
+        } catch (e) {
+          console.warn('Supabase update error:', e);
+        }
+      }
+      // 로컬 스토리지 업데이트
+      const localData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      const item = localData.find(d => d.id === id);
       if (item) {
         item.status = newStatus;
-        saveReservations(data);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(localData));
       }
+      renderDashboard();
     };
 
-    // 5. 항목 삭제
-    window.deleteItem = function(id) {
-      if (confirm(`접수번호 [${id}] 내역을 삭제하시겠습니까?`)) {
-        const data = getReservations();
-        const updated = data.filter(d => d.id !== id);
-        saveReservations(updated);
+    // 7. 항목 삭제
+    window.deleteItem = async function(id) {
+      if (!confirm(`접수번호 [${id}] 내역을 삭제하시겠습니까?`)) return;
+
+      if (window.AuraSupabase && window.AuraSupabase.isConnected()) {
+        try {
+          const supabase = window.AuraSupabase.getClient();
+          await supabase.from('reservations').delete().eq('id', id);
+        } catch (e) {
+          console.warn('Supabase delete error:', e);
+        }
       }
+      const localData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      const updated = localData.filter(d => d.id !== id);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      renderDashboard();
     };
 
-    // 6. 상세 보기 & 수정 모달
+    // 8. 상세 모달 & 메모 수정
     let currentDetailId = null;
     const detailModal = document.getElementById('detailModal');
 
     window.openDetailModal = function(id) {
-      const data = getReservations();
-      const item = data.find(d => d.id === id);
+      const item = cachedReservations.find(d => d.id === id);
       if (!item) return;
 
       currentDetailId = id;
@@ -656,27 +819,38 @@
     document.getElementById('closeDetailModalBtn').addEventListener('click', () => detailModal.classList.add('hidden'));
     document.getElementById('cancelDetailModalBtn').addEventListener('click', () => detailModal.classList.add('hidden'));
 
-    document.getElementById('saveDetailBtn').addEventListener('click', () => {
+    document.getElementById('saveDetailBtn').addEventListener('click', async () => {
       if (!currentDetailId) return;
-      const data = getReservations();
-      const item = data.find(d => d.id === currentDetailId);
-      if (item) {
-        item.status = document.getElementById('detailStatus').value;
-        item.memo = document.getElementById('detailMemo').value.trim();
-        saveReservations(data);
-        detailModal.classList.add('hidden');
+      const newStatus = document.getElementById('detailStatus').value;
+      const newMemo = document.getElementById('detailMemo').value.trim();
+
+      if (window.AuraSupabase && window.AuraSupabase.isConnected()) {
+        try {
+          const supabase = window.AuraSupabase.getClient();
+          await supabase.from('reservations').update({ status: newStatus, memo: newMemo }).eq('id', currentDetailId);
+        } catch (e) {
+          console.warn('Supabase update error:', e);
+        }
       }
+
+      const localData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      const item = localData.find(d => d.id === currentDetailId);
+      if (item) {
+        item.status = newStatus;
+        item.memo = newMemo;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(localData));
+      }
+      detailModal.classList.add('hidden');
+      renderDashboard();
     });
 
     document.getElementById('deleteRecordBtn').addEventListener('click', () => {
       if (!currentDetailId) return;
-      if (confirm(`접수번호 [${currentDetailId}] 항목을 정말 삭제하시겠습니까?`)) {
-        deleteItem(currentDetailId);
-        detailModal.classList.add('hidden');
-      }
+      deleteItem(currentDetailId);
+      detailModal.classList.add('hidden');
     });
 
-    // 7. 신규 상담 수기 등록 모달
+    // 9. 신규 수기 등록 모달
     const addModal = document.getElementById('addModal');
     const openAddModalBtn = document.getElementById('openAddModalBtn');
     const closeAddModalBtn = document.getElementById('closeAddModalBtn');
@@ -696,7 +870,7 @@
     closeAddModalBtn.addEventListener('click', () => addModal.classList.add('hidden'));
     cancelAddModalBtn.addEventListener('click', () => addModal.classList.add('hidden'));
 
-    addForm.addEventListener('submit', (e) => {
+    addForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = document.getElementById('addName').value.trim();
       const phone = document.getElementById('addPhone').value.trim();
@@ -718,69 +892,158 @@
         })
       };
 
-      const data = getReservations();
-      data.unshift(newRecord);
-      saveReservations(data);
+      if (window.AuraSupabase && window.AuraSupabase.isConnected()) {
+        try {
+          const supabase = window.AuraSupabase.getClient();
+          await supabase.from('reservations').insert([{
+            id: newRecord.id,
+            name: newRecord.name,
+            phone: newRecord.phone,
+            date: newRecord.date,
+            goal: newRecord.goal,
+            memo: newRecord.memo,
+            status: newRecord.status
+          }]);
+        } catch (err) {
+          console.warn('Supabase insert error:', err);
+        }
+      }
+
+      const localData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      localData.unshift(newRecord);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(localData));
       addModal.classList.add('hidden');
+      renderDashboard();
     });
 
-    // 8. CSV 내보내기
+    // 10. CSV 다운로드
     document.getElementById('exportCsvBtn').addEventListener('click', () => {
-      const data = getReservations();
-      if (data.length === 0) {
+      if (cachedReservations.length === 0) {
         alert('내보낼 데이터가 없습니다.');
         return;
       }
-
-      // UTF-8 BOM 추가 (엑셀에서 한글 깨짐 방지)
-      let csvContent = '\uFEFF';
-      csvContent += '접수번호,신청일시,고객명,연락처,희망방문일시,관심목적,진행상태,메모\n';
-
-      data.forEach(item => {
-        const row = [
-          `"${item.id}"`,
-          `"${item.createdAt || ''}"`,
-          `"${item.name}"`,
-          `"${item.phone}"`,
-          `"${item.date}"`,
-          `"${item.goal}"`,
-          `"${item.status}"`,
-          `"${(item.memo || '').replace(/"/g, '""')}"`
-        ];
-        csvContent += row.join(',') + '\n';
+      let csvContent = '\uFEFF접수번호,신청일시,고객명,연락처,희망방문일시,관심목적,진행상태,메모\n';
+      cachedReservations.forEach(item => {
+        csvContent += `"${item.id}","${item.createdAt || ''}","${item.name}","${item.phone}","${item.date}","${item.goal}","${item.status}","${(item.memo || '').replace(/"/g, '""')}"\n`;
       });
-
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `AURA_상담신청목록_${new Date().toISOString().slice(0, 10)}.csv`);
-      document.body.appendChild(link);
+      link.href = URL.createObjectURL(blob);
+      link.download = `AURA_상담신청목록_${new Date().toISOString().slice(0, 10)}.csv`;
       link.click();
-      document.body.removeChild(link);
     });
 
-    // 9. 샘플 데이터 복원
-    document.getElementById('resetSampleBtn').addEventListener('click', () => {
-      if (confirm('기존 데이터를 샘플 데이터 4건으로 리셋하시겠습니까?')) {
-        saveReservations(defaultSamples);
-      }
-    });
-
-    // 필터 & 검색 이벤트 바인딩
-    searchInput.addEventListener('input', renderDashboard);
-    statusFilter.addEventListener('change', renderDashboard);
-    goalFilter.addEventListener('change', renderDashboard);
-
-    // 다른 탭에서 신청 발생 시 실시간 동기화
-    window.addEventListener('storage', (e) => {
-      if (e.key === STORAGE_KEY) {
+    // 11. 샘플 데이터 복원
+    document.getElementById('resetSampleBtn').addEventListener('click', async () => {
+      if (confirm('기존 데이터를 샘플 4건으로 리셋하시겠습니까?')) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultSamples));
         renderDashboard();
       }
     });
 
-    // 초기 실행
-    renderDashboard();
+    // 12. Supabase 연동 설정 모달 로직
+    const supabaseModal = document.getElementById('supabaseModal');
+    const openSupabaseModalBtn = document.getElementById('openSupabaseModalBtn');
+    const closeSupabaseModalBtn = document.getElementById('closeSupabaseModalBtn');
+    const cancelSupabaseModalBtn = document.getElementById('cancelSupabaseModalBtn');
+    const saveSupabaseBtn = document.getElementById('saveSupabaseBtn');
+    const disconnectSbBtn = document.getElementById('disconnectSbBtn');
+    const dbStatusBadge = document.getElementById('dbStatusBadge');
+    const sbUrlInput = document.getElementById('sbUrlInput');
+    const sbKeyInput = document.getElementById('sbKeyInput');
+    const sbStatusMsg = document.getElementById('sbStatusMsg');
+    const copySqlBtn = document.getElementById('copySqlBtn');
+
+    function openSbModal() {
+      sbUrlInput.value = window.AuraSupabase.getUrl();
+      sbKeyInput.value = window.AuraSupabase.getKey();
+      sbStatusMsg.className = 'hidden';
+      supabaseModal.classList.remove('hidden');
+    }
+
+    openSupabaseModalBtn.addEventListener('click', openSbModal);
+    dbStatusBadge.addEventListener('click', openSbModal);
+    closeSupabaseModalBtn.addEventListener('click', () => supabaseModal.classList.add('hidden'));
+    cancelSupabaseModalBtn.addEventListener('click', () => supabaseModal.classList.add('hidden'));
+
+    saveSupabaseBtn.addEventListener('click', async () => {
+      const url = sbUrlInput.value.trim();
+      const key = sbKeyInput.value.trim();
+
+      if (!url || !key) {
+        sbStatusMsg.className = 'text-xs py-2 px-3 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30';
+        sbStatusMsg.textContent = 'URL과 API Key를 모두 입력해주세요.';
+        return;
+      }
+
+      saveSupabaseBtn.textContent = '연결 확인 중...';
+      try {
+        await window.AuraSupabase.testConnection(url, key);
+        window.AuraSupabase.setConfig(url, key);
+        sbStatusMsg.className = 'text-xs py-2 px-3 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+        sbStatusMsg.textContent = '성공! Supabase 클라우드 데이터베이스에 연결되었습니다.';
+        setupRealtimeSubscription();
+        setTimeout(() => {
+          supabaseModal.classList.add('hidden');
+          renderDashboard();
+        }, 1200);
+      } catch (err) {
+        console.error('Connection test failed:', err);
+        sbStatusMsg.className = 'text-xs py-2 px-3 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30';
+        sbStatusMsg.textContent = '연결 실패: URL/Key 또는 reservations 테이블이 생성되었는지 확인하세요.';
+      } finally {
+        saveSupabaseBtn.textContent = '연결 테스트 & 저장';
+      }
+    });
+
+    disconnectSbBtn.addEventListener('click', () => {
+      if (confirm('Supabase 연동을 해제하고 로컬스토리지 모드로 전환하시겠습니까?')) {
+        window.AuraSupabase.clearConfig();
+        supabaseModal.classList.add('hidden');
+        renderDashboard();
+      }
+    });
+
+    // SQL 복사 기능
+    const schemaSql = `CREATE TABLE IF NOT EXISTS public.reservations (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  date TEXT NOT NULL,
+  goal TEXT DEFAULT '1:1 VIP 맞춤 PT',
+  memo TEXT DEFAULT '',
+  status TEXT DEFAULT '대기중',
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.reservations ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow anon insert" ON public.reservations FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY "Allow anon select" ON public.reservations FOR SELECT TO anon USING (true);
+CREATE POLICY "Allow anon update" ON public.reservations FOR UPDATE TO anon USING (true);
+CREATE POLICY "Allow anon delete" ON public.reservations FOR DELETE TO anon USING (true);
+ALTER PUBLICATION supabase_realtime ADD TABLE public.reservations;`;
+
+    copySqlBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(schemaSql).then(() => {
+        copySqlBtn.innerHTML = '<span class="text-brand-lime">✓ 복사되었습니다!</span>';
+        setTimeout(() => {
+          copySqlBtn.innerHTML = '<span>SQL 복사하기</span>';
+        }, 2000);
+      });
+    });
+
+    // 13. 새로고침 및 필터 이벤트
+    document.getElementById('refreshBtn').addEventListener('click', renderDashboard);
+    searchInput.addEventListener('input', renderDashboard);
+    statusFilter.addEventListener('change', renderDashboard);
+    goalFilter.addEventListener('change', renderDashboard);
+
+    // 14. 초기 로드
+    document.addEventListener('DOMContentLoaded', () => {
+      renderDashboard();
+      setupRealtimeSubscription();
+    });
   </script>
 </body>
 </html>
