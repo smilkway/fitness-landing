@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AURA CRM | 프리미엄 피트니스 클럽 상담 관리 시스템</title>
+  
+  <!-- Pretendard 폰트 CDN -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              black: '#070a12',
+              dark: '#0f172a',
+              card: '#131d36',
+              border: '#1e293b',
+              lime: '#84cc16',
+              limeGlow: '#a3e635',
+              cyan: '#06b6d4',
+              cyanGlow: '#22d3ee'
+            }
+          },
+          fontFamily: {
+            sans: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'Roboto', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      background-color: #070a12;
+      color: #f1f5f9;
+    }
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    /* 커스텀 스크롤바 */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #84cc16;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-brand-lime selection:text-black">
+
+  <!-- ================= 최상단 관리자 헤더 ================= -->
+  <header class="glass-panel border-b border-brand-border sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 py-3.5 flex items-center justify-between">
+      
+      <!-- 로고 및 서비스 타이틀 -->
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="flex items-center gap-2 group" title="홈페이지로 이동">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-lime to-brand-cyan flex items-center justify-center font-black text-black text-lg shadow-[0_0_15px_rgba(132,204,22,0.4)]">
+            A
+          </div>
+          <div class="flex flex-col">
+            <span class="text-lg font-black tracking-wider text-white">AURA<span class="text-brand-lime">.</span> <span class="text-xs font-semibold text-brand-cyan tracking-normal ml-1">CRM</span></span>
+            <span class="text-[10px] tracking-widest text-slate-400 font-semibold -mt-1 uppercase">VIP 상담 신청 관리 포털</span>
+          </div>
+        </a>
+        <span class="hidden md:inline-block h-5 w-px bg-slate-800 ml-2"></span>
+        <span class="hidden md:inline-block text-xs bg-slate-800/90 text-brand-lime font-medium px-2.5 py-1 rounded-md border border-brand-lime/20">
+          ● 실시간 데이터 연동 중
+        </span>
+      </div>
+
+      <!-- 우측 빠른 액션 및 홈 바로가기 -->
+      <div class="flex items-center gap-3">
+        <div class="hidden sm:flex flex-col text-right">
+          <span class="text-xs text-slate-300 font-semibold flex items-center gap-1.5 justify-end">
+            <span class="w-2 h-2 rounded-full bg-brand-lime"></span>
+            마스터 매니저 (최고관리자)
+          </span>
+          <span id="currentTime" class="text-[11px] text-slate-400 font-mono">2026-10-28 20:00:00</span>
+        </div>
+
+        <a href="index.html" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors">
+          <svg class="w-4 h-4 text-brand-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+          <span>랜딩페이지 보기</span>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= 메인 컨테이너 ================= -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    
+    <!-- 1. KPI 통계 카드 그리드 -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      
+      <!-- 총 신청 -->
+      <div class="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 relative overflow-hidden group hover:border-slate-700 transition-all">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">누적 상담 신청</span>
+          <div class="w-8 h-8 rounded-lg bg-slate-800 text-white flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+          </div>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span id="kpiTotal" class="text-3xl font-black text-white">0</span>
+          <span class="text-xs text-slate-400">건</span>
+        </div>
+        <div class="mt-2 text-[11px] text-slate-500">홈페이지 및 직접 등록 합계</div>
+      </div>
+
+      <!-- 상담 대기중 (강조) -->
+      <div class="p-5 rounded-2xl bg-slate-900/90 border border-amber-500/40 relative overflow-hidden group hover:border-amber-500 transition-all shadow-[0_0_20px_rgba(245,158,11,0.1)]">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+            상담 대기 (미처리)
+          </span>
+          <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          </div>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span id="kpiPending" class="text-3xl font-black text-amber-400">0</span>
+          <span class="text-xs text-amber-300">건</span>
+        </div>
+        <div class="mt-2 text-[11px] text-amber-400/80">30분 내 응대 권장 건수</div>
+      </div>
+
+      <!-- 예약 확정 -->
+      <div class="p-5 rounded-2xl bg-slate-900/90 border border-brand-cyan/40 relative overflow-hidden group hover:border-brand-cyan transition-all">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-bold text-brand-cyan uppercase tracking-wider">방문 예약 확정</span>
+          <div class="w-8 h-8 rounded-lg bg-brand-cyan/20 text-brand-cyan flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+          </div>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span id="kpiConfirmed" class="text-3xl font-black text-brand-cyan">0</span>
+          <span class="text-xs text-cyan-200">건</span>
+        </div>
+        <div class="mt-2 text-[11px] text-slate-500">일정 확정 및 배정 완료</div>
+      </div>
+
+      <!-- 상담 완료 -->
+      <div class="p-5 rounded-2xl bg-slate-900/90 border border-brand-lime/40 relative overflow-hidden group hover:border-brand-lime transition-all">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-bold text-brand-lime uppercase tracking-wider">상담 및 등록 완료</span>
+          <div class="w-8 h-8 rounded-lg bg-brand-lime/20 text-brand-lime flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          </div>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span id="kpiCompleted" class="text-3xl font-black text-brand-lime">0</span>
+          <span class="text-xs text-lime-200">건</span>
+        </div>
+        <div class="mt-2 text-[11px] text-slate-500">상담 완료 및 멤버십 등록</div>
+      </div>
+
+    </section>
+
+    <!-- 2. 컨트롤 패널 (검색 / 필터 / 엑셀 다운로드 / 수기 등록) -->
+    <section class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        
+        <!-- 검색 & 필터 그룹 -->
+        <div class="flex flex-1 flex-wrap items-center gap-3">
+          <!-- 실시간 검색어 입력 -->
+          <div class="relative flex-1 min-w-[200px] max-w-sm">
+            <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <input 
+              type="text" 
+              id="searchInput" 
+              placeholder="고객명, 연락처, 메모 검색..."
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-brand-lime focus:ring-1 focus:ring-brand-lime transition-all"
+            >
+          </div>
+
+          <!-- 상태별 필터 -->
+          <select 
+            id="statusFilter"
+            class="px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 text-xs focus:outline-none focus:border-brand-lime"
+          >
+            <option value="ALL">상태 전체 보기</option>
+            <option value="대기중">대기중</option>
+            <option value="예약확정">예약확정</option>
+            <option value="상담완료">상담완료</option>
+            <option value="취소">취소</option>
+          </select>
+
+          <!-- 관심 목적 필터 -->
+          <select 
+            id="goalFilter"
+            class="px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 text-xs focus:outline-none focus:border-brand-lime"
+          >
+            <option value="ALL">목적 전체 보기</option>
+            <option value="1:1 VIP 맞춤 PT">1:1 VIP 맞춤 PT</option>
+            <option value="체형 교정 및 재활">체형 교정 및 재활</option>
+            <option value="근력 강화 및 바디프로필">근력 강화 & 바디프로필</option>
+            <option value="프라이빗 헬스 멤버십">프라이빗 헬스 멤버십</option>
+          </select>
+        </div>
+
+        <!-- 우측 액션 버튼들 -->
+        <div class="flex items-center gap-2 flex-wrap">
+          <!-- 신규 수기 등록 버튼 -->
+          <button 
+            id="openAddModalBtn"
+            class="px-4 py-2.5 rounded-xl bg-brand-lime hover:bg-brand-limeGlow text-black text-xs font-bold transition-all shadow-[0_0_15px_rgba(132,204,22,0.3)] flex items-center gap-1.5"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+            <span>상담 직접 등록</span>
+          </button>
+
+          <!-- 엑셀 CSV 내보내기 -->
+          <button 
+            id="exportCsvBtn"
+            class="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors flex items-center gap-1.5"
+            title="현재 내역을 CSV 파일로 다운로드합니다"
+          >
+            <svg class="w-4 h-4 text-brand-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            <span>엑셀 다운로드 (CSV)</span>
+          </button>
+
+          <!-- 초기화 / 리셋 드롭다운 메뉴 -->
+          <button 
+            id="resetSampleBtn"
+            class="px-3 py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-xs border border-slate-800 transition-colors"
+            title="샘플 데이터 복원"
+          >
+            샘플 초기화
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 3. 실시간 예약 신청자 목록 테이블 -->
+    <section class="rounded-2xl bg-slate-900/90 border border-slate-800 overflow-hidden shadow-xl">
+      <div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between bg-slate-950/50">
+        <div class="flex items-center gap-2">
+          <h2 class="text-sm font-bold text-white">신청 내역 실시간 리스트</h2>
+          <span id="filteredCountBadge" class="text-xs bg-slate-800 text-brand-lime font-mono px-2 py-0.5 rounded-full font-bold">
+            0건
+          </span>
+        </div>
+        <span class="text-[11px] text-slate-500 hidden sm:inline">
+          * 상태 드롭다운을 변경하면 즉시 자동 저장됩니다.
+        </span>
+      </div>
+
+      <!-- 테이블 본문 -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="bg-slate-950/80 text-slate-400 font-semibold border-b border-slate-800 uppercase tracking-wider text-[11px]">
+              <th class="py-3.5 px-4">접수번호</th>
+              <th class="py-3.5 px-4">신청일시</th>
+              <th class="py-3.5 px-4">고객 성함</th>
+              <th class="py-3.5 px-4">연락처</th>
+              <th class="py-3.5 px-4">희망 방문일시</th>
+              <th class="py-3.5 px-4">관심 목적</th>
+              <th class="py-3.5 px-4 min-w-[160px]">고객 메모</th>
+              <th class="py-3.5 px-4 text-center">진행 상태</th>
+              <th class="py-3.5 px-4 text-right">관리</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-slate-800/60 text-slate-200">
+            <!-- 자바스크립트로 동적 렌더링 -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 데이터 없을 때 Empty State -->
+      <div id="emptyState" class="hidden py-16 text-center text-slate-500">
+        <svg class="w-12 h-12 mx-auto text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+        <p class="text-sm font-semibold text-slate-400">조건에 맞는 상담 신청 내역이 없습니다.</p>
+        <p class="text-xs text-slate-600 mt-1">검색어나 필터를 재조정하거나 홈페이지에서 새 상담을 접수해 보세요.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= 모달 1: 신규 상담 직접 등록 ================= -->
+  <div id="addModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden">
+    <div class="relative w-full max-w-lg rounded-2xl bg-slate-900 border border-brand-lime/80 p-6 sm:p-8 shadow-2xl">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-brand-lime"></span>
+          신규 상담 수기 등록 (전화/방문)
+        </h3>
+        <button id="closeAddModalBtn" class="text-slate-400 hover:text-white text-xl">&times;</button>
+      </div>
+
+      <form id="addForm" class="space-y-4 text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">고객 성함 *</label>
+            <input type="text" id="addName" required placeholder="예: 김상우" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-brand-lime">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">연락처 *</label>
+            <input type="tel" id="addPhone" required placeholder="010-0000-0000" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-brand-lime">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">희망 방문 일시 *</label>
+            <input type="datetime-local" id="addDate" required class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-brand-lime scheme-dark">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">관심 목적</label>
+            <select id="addGoal" class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-brand-lime">
+              <option value="1:1 VIP 맞춤 PT">1:1 VIP 맞춤 PT</option>
+              <option value="체형 교정 및 재활">체형 교정 및 재활</option>
+              <option value="근력 강화 및 바디프로필">근력 강화 & 바디프로필</option>
+              <option value="프라이빗 헬스 멤버십">프라이빗 헬스 멤버십</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">초기 진행 상태</label>
+          <select id="addStatus" class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-brand-lime">
+            <option value="대기중">대기중</option>
+            <option value="예약확정" selected>예약확정</option>
+            <option value="상담완료">상담완료</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">상담 메모 및 특이사항</label>
+          <textarea id="addMemo" rows="3" placeholder="배정 희망 코치, 통화 내용, 운동 경력 등을 기록하세요." class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-brand-lime resize-none"></textarea>
+        </div>
+
+        <div class="pt-3 flex items-center justify-end gap-2 border-t border-slate-800">
+          <button type="button" id="cancelAddModalBtn" class="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white font-semibold">취소</button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-brand-lime hover:bg-brand-limeGlow text-black font-extrabold shadow-[0_0_15px_rgba(132,204,22,0.4)]">저장하기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= 모달 2: 상담 상세 보기 & 메모 수정 ================= -->
+  <div id="detailModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden">
+    <div class="relative w-full max-w-lg rounded-2xl bg-slate-900 border border-brand-cyan/80 p-6 sm:p-8 shadow-2xl">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
+        <div>
+          <span id="detailId" class="text-xs text-brand-cyan font-mono font-bold">RES-000000</span>
+          <h3 class="text-lg font-bold text-white mt-0.5">상담 신청 상세 및 코치 배정</h3>
+        </div>
+        <button id="closeDetailModalBtn" class="text-slate-400 hover:text-white text-xl">&times;</button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div class="grid grid-cols-2 gap-3 bg-slate-950 p-4 rounded-xl border border-slate-800">
+          <div>
+            <span class="text-slate-400 block text-[11px]">고객 성함</span>
+            <span id="detailName" class="text-white font-bold text-sm">홍길동</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-[11px]">연락처</span>
+            <span id="detailPhone" class="text-brand-lime font-mono font-bold text-sm">010-0000-0000</span>
+          </div>
+          <div class="mt-2">
+            <span class="text-slate-400 block text-[11px]">희망 방문 일시</span>
+            <span id="detailDate" class="text-slate-200 font-semibold">2026-10-29 14:00</span>
+          </div>
+          <div class="mt-2">
+            <span class="text-slate-400 block text-[11px]">관심 목적</span>
+            <span id="detailGoal" class="text-brand-cyan font-semibold">1:1 VIP 맞춤 PT</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">진행 상태 변경</label>
+          <select id="detailStatus" class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-brand-cyan">
+            <option value="대기중">대기중</option>
+            <option value="예약확정">예약확정</option>
+            <option value="상담완료">상담완료</option>
+            <option value="취소">취소</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">상담 & 코칭 매니저 메모</label>
+          <textarea id="detailMemo" rows="4" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-brand-cyan resize-none"></textarea>
+        </div>
+
+        <div class="pt-3 flex items-center justify-between border-t border-slate-800">
+          <button type="button" id="deleteRecordBtn" class="px-3.5 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-semibold border border-rose-500/30">
+            삭제
+          </button>
+          <div class="flex items-center gap-2">
+            <button type="button" id="cancelDetailModalBtn" class="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white font-semibold">닫기</button>
+            <button type="button" id="saveDetailBtn" class="px-5 py-2.5 rounded-xl bg-brand-cyan hover:bg-brand-cyanGlow text-black font-extrabold shadow-[0_0_15px_rgba(6,182,212,0.4)]">저장</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 자바스크립트 로직 ================= -->
+  <script>
+    const STORAGE_KEY = 'aura_reservations';
+
+    // 1. 초기 샘플 데이터 정의
+    const defaultSamples = [
+      {
+        id: 'RES-1730001',
+        name: '최민석',
+        phone: '010-3849-1120',
+        date: '2026-10-29 15:00',
+        goal: '1:1 VIP 맞춤 PT',
+        memo: '강태양 마스터 코치님 3대 운동 및 스트렝스 상담 희망합니다.',
+        status: '대기중',
+        createdAt: '2026-10-28 17:30'
+      },
+      {
+        id: 'RES-1730002',
+        name: '정유라',
+        phone: '010-9281-4432',
+        date: '2026-10-30 11:30',
+        goal: '체형 교정 및 재활',
+        memo: '골반 불균형 및 허리 디스크 이력 있음. 서아인 코치님 배정 요청.',
+        status: '상담완료',
+        createdAt: '2026-10-28 14:15'
+      },
+      {
+        id: 'RES-1730003',
+        name: '박진형',
+        phone: '010-5542-8871',
+        date: '2026-10-30 19:00',
+        goal: '근력 강화 및 바디프로필',
+        memo: '3개월 단기 바디프로필 촬영 준비 중입니다. 식단 가이드 필요.',
+        status: '예약확정',
+        createdAt: '2026-10-27 20:00'
+      },
+      {
+        id: 'RES-1730004',
+        name: '송하은',
+        phone: '010-7731-9920',
+        date: '2026-11-01 14:00',
+        goal: '프라이빗 헬스 멤버십',
+        memo: '조용한 프라이빗 헬스장 찾고 있습니다. 시설 투어 희망.',
+        status: '대기중',
+        createdAt: '2026-10-28 18:45'
+      }
+    ];
+
+    function getReservations() {
+      const data = localStorage.getItem(STORAGE_KEY);
+      if (!data) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultSamples));
+        return defaultSamples;
+      }
+      try {
+        return JSON.parse(data);
+      } catch (e) {
+        return defaultSamples;
+      }
+    }
+
+    function saveReservations(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      renderDashboard();
+    }
+
+    // 2. 실시간 시계
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('currentTime').textContent = now.toLocaleString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // 3. 렌더링 및 통계 계산
+    const tableBody = document.getElementById('tableBody');
+    const emptyState = document.getElementById('emptyState');
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const goalFilter = document.getElementById('goalFilter');
+
+    function renderDashboard() {
+      const allData = getReservations();
+
+      // KPI 카운트
+      const totalCount = allData.length;
+      const pendingCount = allData.filter(d => d.status === '대기중').length;
+      const confirmedCount = allData.filter(d => d.status === '예약확정').length;
+      const completedCount = allData.filter(d => d.status === '상담완료').length;
+
+      document.getElementById('kpiTotal').textContent = totalCount;
+      document.getElementById('kpiPending').textContent = pendingCount;
+      document.getElementById('kpiConfirmed').textContent = confirmedCount;
+      document.getElementById('kpiCompleted').textContent = completedCount;
+
+      // 필터링 적용
+      const keyword = searchInput.value.trim().toLowerCase();
+      const selectedStatus = statusFilter.value;
+      const selectedGoal = goalFilter.value;
+
+      const filtered = allData.filter(item => {
+        const matchesStatus = (selectedStatus === 'ALL' || item.status === selectedStatus);
+        const matchesGoal = (selectedGoal === 'ALL' || item.goal === selectedGoal);
+        const matchesSearch = !keyword || 
+          item.name.toLowerCase().includes(keyword) || 
+          item.phone.includes(keyword) || 
+          (item.memo && item.memo.toLowerCase().includes(keyword));
+        return matchesStatus && matchesGoal && matchesSearch;
+      });
+
+      document.getElementById('filteredCountBadge').textContent = `${filtered.length}건`;
+
+      if (filtered.length === 0) {
+        tableBody.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+
+      // 상태별 뱃지 스타일
+      const statusStyles = {
+        '대기중': 'bg-amber-500/15 text-amber-400 border border-amber-500/30',
+        '예약확정': 'bg-brand-cyan/15 text-brand-cyan border border-brand-cyan/30',
+        '상담완료': 'bg-brand-lime/15 text-brand-lime border border-brand-lime/30',
+        '취소': 'bg-slate-800 text-slate-400 border border-slate-700'
+      };
+
+      tableBody.innerHTML = filtered.map(item => `
+        <tr class="hover:bg-slate-800/40 transition-colors">
+          <td class="py-3.5 px-4 font-mono font-bold text-slate-400">${item.id}</td>
+          <td class="py-3.5 px-4 text-slate-400 text-[11px]">${item.createdAt || '-'}</td>
+          <td class="py-3.5 px-4 font-bold text-white">${escapeHtml(item.name)}</td>
+          <td class="py-3.5 px-4">
+            <a href="tel:${item.phone}" class="font-mono text-brand-cyan hover:underline">${item.phone}</a>
+          </td>
+          <td class="py-3.5 px-4 font-medium text-slate-200">${item.date}</td>
+          <td class="py-3.5 px-4 text-slate-300">
+            <span class="px-2 py-0.5 rounded bg-slate-800 text-[11px]">${escapeHtml(item.goal)}</span>
+          </td>
+          <td class="py-3.5 px-4 text-slate-400 max-w-xs truncate cursor-pointer hover:text-white" onclick="openDetailModal('${item.id}')" title="${escapeHtml(item.memo)}">
+            ${escapeHtml(item.memo || '-')}
+          </td>
+          <td class="py-3.5 px-4 text-center">
+            <select 
+              onchange="changeStatus('${item.id}', this.value)"
+              class="px-2.5 py-1 rounded-lg text-xs font-semibold focus:outline-none cursor-pointer ${statusStyles[item.status] || 'bg-slate-800'}"
+            >
+              <option value="대기중" ${item.status === '대기중' ? 'selected' : ''}>대기중</option>
+              <option value="예약확정" ${item.status === '예약확정' ? 'selected' : ''}>예약확정</option>
+              <option value="상담완료" ${item.status === '상담완료' ? 'selected' : ''}>상담완료</option>
+              <option value="취소" ${item.status === '취소' ? 'selected' : ''}>취소</option>
+            </select>
+          </td>
+          <td class="py-3.5 px-4 text-right space-x-1">
+            <button 
+              onclick="openDetailModal('${item.id}')"
+              class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+              title="상세 보기 및 메모 수정"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+            </button>
+            <button 
+              onclick="deleteItem('${item.id}')"
+              class="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-400 transition-colors"
+              title="삭제"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>"']/g, function(m) {
+        return {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#039;'
+        }[m];
+      });
+    }
+
+    // 4. 상태 변경
+    window.changeStatus = function(id, newStatus) {
+      const data = getReservations();
+      const item = data.find(d => d.id === id);
+      if (item) {
+        item.status = newStatus;
+        saveReservations(data);
+      }
+    };
+
+    // 5. 항목 삭제
+    window.deleteItem = function(id) {
+      if (confirm(`접수번호 [${id}] 내역을 삭제하시겠습니까?`)) {
+        const data = getReservations();
+        const updated = data.filter(d => d.id !== id);
+        saveReservations(updated);
+      }
+    };
+
+    // 6. 상세 보기 & 수정 모달
+    let currentDetailId = null;
+    const detailModal = document.getElementById('detailModal');
+
+    window.openDetailModal = function(id) {
+      const data = getReservations();
+      const item = data.find(d => d.id === id);
+      if (!item) return;
+
+      currentDetailId = id;
+      document.getElementById('detailId').textContent = item.id;
+      document.getElementById('detailName').textContent = item.name + ' 님';
+      document.getElementById('detailPhone').textContent = item.phone;
+      document.getElementById('detailDate').textContent = item.date;
+      document.getElementById('detailGoal').textContent = item.goal;
+      document.getElementById('detailStatus').value = item.status;
+      document.getElementById('detailMemo').value = item.memo || '';
+
+      detailModal.classList.remove('hidden');
+    };
+
+    document.getElementById('closeDetailModalBtn').addEventListener('click', () => detailModal.classList.add('hidden'));
+    document.getElementById('cancelDetailModalBtn').addEventListener('click', () => detailModal.classList.add('hidden'));
+
+    document.getElementById('saveDetailBtn').addEventListener('click', () => {
+      if (!currentDetailId) return;
+      const data = getReservations();
+      const item = data.find(d => d.id === currentDetailId);
+      if (item) {
+        item.status = document.getElementById('detailStatus').value;
+        item.memo = document.getElementById('detailMemo').value.trim();
+        saveReservations(data);
+        detailModal.classList.add('hidden');
+      }
+    });
+
+    document.getElementById('deleteRecordBtn').addEventListener('click', () => {
+      if (!currentDetailId) return;
+      if (confirm(`접수번호 [${currentDetailId}] 항목을 정말 삭제하시겠습니까?`)) {
+        deleteItem(currentDetailId);
+        detailModal.classList.add('hidden');
+      }
+    });
+
+    // 7. 신규 상담 수기 등록 모달
+    const addModal = document.getElementById('addModal');
+    const openAddModalBtn = document.getElementById('openAddModalBtn');
+    const closeAddModalBtn = document.getElementById('closeAddModalBtn');
+    const cancelAddModalBtn = document.getElementById('cancelAddModalBtn');
+    const addForm = document.getElementById('addForm');
+
+    openAddModalBtn.addEventListener('click', () => {
+      addForm.reset();
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(14, 0, 0, 0);
+      const tzOffset = tomorrow.getTimezoneOffset() * 60000;
+      document.getElementById('addDate').value = (new Date(tomorrow.getTime() - tzOffset)).toISOString().slice(0, 16);
+      addModal.classList.remove('hidden');
+    });
+
+    closeAddModalBtn.addEventListener('click', () => addModal.classList.add('hidden'));
+    cancelAddModalBtn.addEventListener('click', () => addModal.classList.add('hidden'));
+
+    addForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('addName').value.trim();
+      const phone = document.getElementById('addPhone').value.trim();
+      const date = document.getElementById('addDate').value.replace('T', ' ');
+      const goal = document.getElementById('addGoal').value;
+      const status = document.getElementById('addStatus').value;
+      const memo = document.getElementById('addMemo').value.trim();
+
+      const newRecord = {
+        id: 'RES-' + Date.now().toString().slice(-6),
+        name,
+        phone,
+        date,
+        goal,
+        memo,
+        status,
+        createdAt: new Date().toLocaleString('ko-KR', { 
+          year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false 
+        })
+      };
+
+      const data = getReservations();
+      data.unshift(newRecord);
+      saveReservations(data);
+      addModal.classList.add('hidden');
+    });
+
+    // 8. CSV 내보내기
+    document.getElementById('exportCsvBtn').addEventListener('click', () => {
+      const data = getReservations();
+      if (data.length === 0) {
+        alert('내보낼 데이터가 없습니다.');
+        return;
+      }
+
+      // UTF-8 BOM 추가 (엑셀에서 한글 깨짐 방지)
+      let csvContent = '\uFEFF';
+      csvContent += '접수번호,신청일시,고객명,연락처,희망방문일시,관심목적,진행상태,메모\n';
+
+      data.forEach(item => {
+        const row = [
+          `"${item.id}"`,
+          `"${item.createdAt || ''}"`,
+          `"${item.name}"`,
+          `"${item.phone}"`,
+          `"${item.date}"`,
+          `"${item.goal}"`,
+          `"${item.status}"`,
+          `"${(item.memo || '').replace(/"/g, '""')}"`
+        ];
+        csvContent += row.join(',') + '\n';
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `AURA_상담신청목록_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+
+    // 9. 샘플 데이터 복원
+    document.getElementById('resetSampleBtn').addEventListener('click', () => {
+      if (confirm('기존 데이터를 샘플 데이터 4건으로 리셋하시겠습니까?')) {
+        saveReservations(defaultSamples);
+      }
+    });
+
+    // 필터 & 검색 이벤트 바인딩
+    searchInput.addEventListener('input', renderDashboard);
+    statusFilter.addEventListener('change', renderDashboard);
+    goalFilter.addEventListener('change', renderDashboard);
+
+    // 다른 탭에서 신청 발생 시 실시간 동기화
+    window.addEventListener('storage', (e) => {
+      if (e.key === STORAGE_KEY) {
+        renderDashboard();
+      }
+    });
+
+    // 초기 실행
+    renderDashboard();
+  </script>
+</body>
+</html>

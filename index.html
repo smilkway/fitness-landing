@@ -774,6 +774,10 @@
           <a href="#" class="hover:text-white transition-colors">개인정보처리방침</a>
           <a href="#" class="hover:text-white transition-colors">시설배치도</a>
           <a href="#consulting" class="text-brand-lime hover:underline font-semibold">체험 신청 바로가기</a>
+          <a href="admin.html" class="text-slate-400 hover:text-brand-cyan transition-colors flex items-center gap-1 font-semibold">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            <span>관리자 대시보드</span>
+          </a>
         </div>
       </div>
 
@@ -915,6 +919,57 @@
       if (e.target === modal) closeModal();
     });
 
+    // 초기 샘플 데이터 시딩 (로컬스토리지에 데이터가 없을 때)
+    const STORAGE_KEY = 'aura_reservations';
+    function initSampleData() {
+      if (!localStorage.getItem(STORAGE_KEY)) {
+        const samples = [
+          {
+            id: 'RES-1730001',
+            name: '최민석',
+            phone: '010-3849-1120',
+            date: '2026-10-29 15:00',
+            goal: '1:1 VIP 맞춤 PT',
+            memo: '강태양 마스터 코치님 3대 운동 및 스트렝스 상담 희망합니다.',
+            status: '대기중',
+            createdAt: '2026-10-28 17:30'
+          },
+          {
+            id: 'RES-1730002',
+            name: '정유라',
+            phone: '010-9281-4432',
+            date: '2026-10-30 11:30',
+            goal: '체형 교정 및 재활',
+            memo: '골반 불균형 및 허리 디스크 이력 있음. 서아인 코치님 배정 요청.',
+            status: '상담완료',
+            createdAt: '2026-10-28 14:15'
+          },
+          {
+            id: 'RES-1730003',
+            name: '박진형',
+            phone: '010-5542-8871',
+            date: '2026-10-30 19:00',
+            goal: '근력 강화 및 바디프로필',
+            memo: '3개월 단기 바디프로필 촬영 준비 중입니다. 식단 가이드 필요.',
+            status: '예약확정',
+            createdAt: '2026-10-27 20:00'
+          },
+          {
+            id: 'RES-1730004',
+            name: '송하은',
+            phone: '010-7731-9920',
+            date: '2026-11-01 14:00',
+            goal: '프라이빗 헬스 멤버십',
+            memo: '조용한 프라이빗 헬스장 찾고 있습니다. 시설 투어 희망.',
+            status: '대기중',
+            createdAt: '2026-10-28 18:45'
+          }
+        ];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(samples));
+      }
+    }
+    initSampleData();
+
     form.addEventListener('submit', (e) => {
       e.preventDefault();
 
@@ -922,10 +977,37 @@
       const phone = document.getElementById('userPhone').value.trim();
       const date = document.getElementById('visitDate').value;
       const goal = document.getElementById('goal').value;
+      const memo = document.getElementById('memo').value.trim() || '없음';
 
       if (!name || !phone || !date) {
         alert('필수 입력 항목을 모두 작성해주세요.');
         return;
+      }
+
+      // 1) 로컬 스토리지에 신청 데이터 저장 (관리자 페이지 실시간 연동)
+      try {
+        const existingData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        const newRecord = {
+          id: 'RES-' + Date.now().toString().slice(-6),
+          name: name,
+          phone: phone,
+          date: date.replace('T', ' '),
+          goal: goal,
+          memo: memo,
+          status: '대기중',
+          createdAt: new Date().toLocaleString('ko-KR', { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit', 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          })
+        };
+        existingData.unshift(newRecord);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(existingData));
+      } catch (err) {
+        console.error('Storage error:', err);
       }
 
       // 요구사항: "상담 예약이 접수되었습니다! 담당 매니저가 곧 연락드립니다." 알림 팝업
